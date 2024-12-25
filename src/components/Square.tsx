@@ -38,7 +38,7 @@ export function Square({
   return (
     <div
       className={`
-        w-24 h-24 flex items-center justify-center cursor-pointer
+        aspect-square w-full flex items-center justify-center cursor-pointer
         ${isLight ? "bg-zinc-100" : "bg-zinc-800"}
         ${isSelected ? "ring-4 ring-blue-400 ring-inset" : ""}
         ${isPossibleMove ? "border-8 border-green-400" : ""}
@@ -50,7 +50,9 @@ export function Square({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="transition-all duration-300 ease-in-out">{children}</div>
+      <div className="transition-all duration-300 ease-in-out w-full h-full p-2">
+        {children}
+      </div>
     </div>
   );
 }

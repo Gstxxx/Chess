@@ -84,10 +84,10 @@ export function GameLobby() {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 w-full max-w-[min(90vw,90vh)]">
       {currentRoom ? (
         <div className="text-center mb-4">
-          <h2 className="text-xl font-bold">
+          <h2 className="text-xl md:text-2xl font-bold">
             Current Room: {currentRoom.name}
           </h2>
           <p className="text-sm text-gray-600">ID: {currentRoom.id}</p>
@@ -97,18 +97,18 @@ export function GameLobby() {
         </div>
       ) : (
         <>
-          <div className="flex justify-between mb-4">
-            <h2 className="text-xl font-bold">Available Rooms</h2>
-            <div className="space-x-2">
+          <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+            <h2 className="text-xl md:text-2xl font-bold">Available Rooms</h2>
+            <div className="flex gap-2">
               <button
                 onClick={() => setShowJoinForm(true)}
-                className="bg-green-500 text-white px-4 py-2 rounded"
+                className="flex-1 sm:flex-none bg-green-500 text-white px-4 py-2 rounded text-sm md:text-base"
               >
                 Join by ID
               </button>
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="bg-blue-500 text-white px-4 py-2 rounded"
+                className="flex-1 sm:flex-none bg-blue-500 text-white px-4 py-2 rounded text-sm md:text-base"
               >
                 Create Room
               </button>
@@ -116,95 +116,115 @@ export function GameLobby() {
           </div>
 
           {showJoinForm && (
-            <div className="mb-4 p-4 border rounded">
-              <input
-                type="text"
-                value={joinRoomId}
-                onChange={(e) => setJoinRoomId(e.target.value)}
-                placeholder="Enter Room ID"
-                className="border p-2 rounded w-full mb-2"
+            <>
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                onClick={() => setShowJoinForm(false)}
               />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleJoinById}
-                  className="bg-green-500 text-white px-4 py-2 rounded flex-1"
-                >
-                  Join
-                </button>
-                <button
-                  onClick={() => setShowJoinForm(false)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded flex-1"
-                >
-                  Cancel
-                </button>
+              <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-lg shadow-xl w-[90%] max-w-md">
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-4">Join Room</h3>
+                  <input
+                    type="text"
+                    value={joinRoomId}
+                    onChange={(e) => setJoinRoomId(e.target.value)}
+                    placeholder="Enter Room ID"
+                    className="border p-2 rounded w-full mb-4"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleJoinById}
+                      className="bg-green-500 text-white px-4 py-2 rounded flex-1"
+                    >
+                      Join
+                    </button>
+                    <button
+                      onClick={() => setShowJoinForm(false)}
+                      className="bg-gray-500 text-white px-4 py-2 rounded flex-1"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {showCreateForm && (
-            <div className="mb-4 p-4 border rounded">
-              <input
-                type="text"
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-                placeholder="Room Name"
-                className="border p-2 rounded w-full mb-2"
+            <>
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                onClick={() => setShowCreateForm(false)}
               />
-              <div className="flex gap-2 mb-2">
-                <button
-                  onClick={() => setPreferredColor("white")}
-                  className={`flex-1 p-2 rounded ${
-                    preferredColor === "white"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200"
-                  }`}
-                >
-                  White
-                </button>
-                <button
-                  onClick={() => setPreferredColor("black")}
-                  className={`flex-1 p-2 rounded ${
-                    preferredColor === "black"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200"
-                  }`}
-                >
-                  Black
-                </button>
+              <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-lg shadow-xl w-[90%] max-w-md">
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-4">Create Room</h3>
+                  <input
+                    type="text"
+                    value={roomName}
+                    onChange={(e) => setRoomName(e.target.value)}
+                    placeholder="Room Name"
+                    className="border p-2 rounded w-full mb-4"
+                  />
+                  <div className="flex gap-2 mb-4">
+                    <button
+                      onClick={() => setPreferredColor("white")}
+                      className={`flex-1 p-2 rounded ${
+                        preferredColor === "white"
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-200"
+                      }`}
+                    >
+                      White
+                    </button>
+                    <button
+                      onClick={() => setPreferredColor("black")}
+                      className={`flex-1 p-2 rounded ${
+                        preferredColor === "black"
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-200"
+                      }`}
+                    >
+                      Black
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCreateRoom}
+                      className="bg-green-500 text-white px-4 py-2 rounded flex-1"
+                    >
+                      Create
+                    </button>
+                    <button
+                      onClick={() => setShowCreateForm(false)}
+                      className="bg-gray-500 text-white px-4 py-2 rounded flex-1"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCreateRoom}
-                  className="bg-green-500 text-white px-4 py-2 rounded flex-1"
-                >
-                  Create
-                </button>
-                <button
-                  onClick={() => setShowCreateForm(false)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded flex-1"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
+            </>
           )}
 
           <div className="grid gap-4">
             {rooms.map((room) => (
               <div
                 key={room.id}
-                className="border p-4 rounded flex justify-between items-center"
+                className="border p-3 md:p-4 rounded flex flex-col sm:flex-row justify-between gap-2 sm:items-center"
               >
                 <div>
-                  <h3 className="font-bold">{room.name}</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className="font-bold text-sm md:text-base">
+                    {room.name}
+                  </h3>
+                  <p className="text-xs md:text-sm text-gray-600">
                     Players: {room.hasWhite ? "White " : ""}
                     {room.hasBlack ? "Black" : ""}
                   </p>
                 </div>
                 <button
                   onClick={() => handleJoinRoom(room.id)}
-                  className="bg-green-500 text-white px-4 py-2 rounded"
+                  className="bg-green-500 text-white px-4 py-2 rounded text-sm md:text-base"
                   disabled={room.hasWhite && room.hasBlack}
                 >
                   {room.hasWhite && room.hasBlack ? "Full" : "Join"}

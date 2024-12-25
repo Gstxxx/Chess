@@ -5,8 +5,8 @@ import { GameProvider } from "./contexts/GameContext";
 function App() {
   return (
     <GameProvider>
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-xl">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center py-8">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-[min(90vw,90vh)] flex flex-col items-center">
           <GameLobby />
           <ChessBoard />
         </div>

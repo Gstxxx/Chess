@@ -41,8 +41,8 @@ export function ChessPiece({
     }
   }, [position, prevPosition]);
 
-  const translateX = (position.x - prevPosition.x) * 96;
-  const translateY = (position.y - prevPosition.y) * 96;
+  const translateX = (position.x - prevPosition.x) * 100;
+  const translateY = (position.y - prevPosition.y) * 100;
 
   const handleDragStart = (e: React.DragEvent) => {
     // Create a smaller drag preview
@@ -80,12 +80,12 @@ export function ChessPiece({
 
   return (
     <div
-      className={`w-24 h-24 relative ${
+      className={`w-full h-full relative ${
         color === "black" ? "grayscale" : "sepia"
       }`}
       style={{
         transform: isAnimating
-          ? `translate(${translateX}px, ${translateY}px)`
+          ? `translate(${translateX}%, ${translateY}%)`
           : "none",
         transition: isCapturing
           ? "opacity 400ms ease-in-out, transform 400ms ease-in-out, scale 400ms ease-in-out"

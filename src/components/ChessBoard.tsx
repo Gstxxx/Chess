@@ -53,19 +53,13 @@ export function ChessBoard() {
       if (piece?.color !== playerColor) return;
 
       const newBoard = board.map((row) => [...row]);
-
-      // Update the board
       newBoard[to.y][to.x] = piece;
       newBoard[from.y][from.x] = null;
       setBoard(newBoard);
-
-      // Send move to server
       makeMove(from, to, newBoard);
-
-      // Reset selection
       resetSelection();
     },
-    [board, isMyTurn, playerColor, makeMove]
+    [board, isMyTurn, playerColor, makeMove, resetSelection]
   );
 
   const handleSquareClick = useCallback(
@@ -162,9 +156,7 @@ export function ChessBoard() {
         setBoard(data.gameState.board);
         setTurn(data.gameState.turn);
 
-        // Check for checkmate after receiving move
         if (isCheckmate(data.gameState.board, data.gameState.turn)) {
-          // The winner is the opposite of whose turn it is
           setWinner(data.gameState.turn === "white" ? "black" : "white");
         }
 
@@ -174,18 +166,18 @@ export function ChessBoard() {
 
     ws.addEventListener("message", handleMessage);
     return () => ws.removeEventListener("message", handleMessage);
-  }, [ws]);
+  }, [ws, resetSelection]);
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-4 w-full max-w-[min(90vw,90vh)] px-4">
       {winner ? (
-        <h2 className="text-2xl font-bold text-green-600">
+        <h2 className="text-xl md:text-2xl font-bold text-green-600">
           {winner.charAt(0).toUpperCase() + winner.slice(1)} wins by checkmate!
         </h2>
       ) : (
-        <h2 className="text-2xl font-bold capitalize">{`${turn}'s turn`}</h2>
+        <h2 className="text-xl md:text-2xl font-bold capitalize">{`${turn}'s turn`}</h2>
       )}
-      <div className="grid grid-cols-8 gap-0 border-2 border-gray-800">
+      <div className="grid grid-cols-8 gap-0 border-2 border-gray-800 w-full aspect-square">
         {renderBoard()}
       </div>
     </div>
