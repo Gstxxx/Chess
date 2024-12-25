@@ -1,29 +1,22 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Square } from "./Square";
 import { ChessPiece } from "./ChessPiece";
 import { initialBoard } from "../utils/chess";
 import { calculatePieceMoves } from "../utils/chessMoves";
-import { isKingInCheck, isMoveSafe, hasLegalMoves } from "../utils/gameChecks";
+import { isMoveSafe } from "../utils/gameChecks";
 import type { Position } from "../types/chess";
+import { useGame } from "../hooks/useGame";
+import { isCheckmate } from "../utils/chess";
 
 export function ChessBoard() {
   // State declarations
   const [board, setBoard] = useState(initialBoard);
   const [selectedPiece, setSelectedPiece] = useState<Position | null>(null);
   const [turn, setTurn] = useState<"white" | "black">("white");
-  const [capturedPieces, setCapturedPieces] = useState<{
-    white: number;
-    black: number;
-  }>({ white: 0, black: 0 });
   const [possibleMoves, setPossibleMoves] = useState<Position[]>([]);
   const [possibleCaptures, setPossibleCaptures] = useState<Position[]>([]);
-  const [gameOver, setGameOver] = useState<"white" | "black" | "draw" | null>(
-    null
-  );
-  const [checkingPiece, setCheckingPiece] = useState<Position | null>(null);
-  const [kingInCheck, setKingInCheck] = useState<"white" | "black" | null>(
-    null
-  );
+  const { isMyTurn, makeMove, playerColor, ws } = useGame();
+  const [winner, setWinner] = useState<"white" | "black" | null>(null);
 
   const resetSelection = useCallback(() => {
     setSelectedPiece(null);
@@ -54,68 +47,29 @@ export function ChessBoard() {
 
   const handlePieceMove = useCallback(
     (from: Position, to: Position) => {
-      const piece = board[from.y][from.x];
-      const targetPiece = board[to.y][to.x];
+      if (!isMyTurn) return;
 
-      // Create new board state but don't update yet
+      const piece = board[from.y][from.x];
+      if (piece?.color !== playerColor) return;
+
       const newBoard = board.map((row) => [...row]);
 
-      if (targetPiece) {
-        // Animate capture
-        const capturedPiece = { ...targetPiece, isCapturing: true };
-        newBoard[to.y][to.x] = capturedPiece;
+      // Update the board
+      newBoard[to.y][to.x] = piece;
+      newBoard[from.y][from.x] = null;
+      setBoard(newBoard);
 
-        // Update captured pieces count
-        if (piece) {
-          setCapturedPieces((prev) => ({
-            ...prev,
-            [piece.color]: prev[piece.color] + 1,
-          }));
+      // Send move to server
+      makeMove(from, to, newBoard);
 
-          if (targetPiece.type === "king") {
-            setGameOver(piece.color);
-            return;
-          }
-        }
-
-        // Wait for capture animation before updating board
-        setTimeout(() => {
-          newBoard[to.y][to.x] = piece;
-          newBoard[from.y][from.x] = null;
-          setBoard(newBoard);
-        }, 300);
-      } else {
-        // Regular move
-        newBoard[to.y][to.x] = piece;
-        newBoard[from.y][from.x] = null;
-        setBoard(newBoard);
-      }
-
-      const nextTurn = turn === "white" ? "black" : "white";
-      const checkingPiecePos = isKingInCheck(newBoard, nextTurn);
-
-      setCheckingPiece(checkingPiecePos);
-      setKingInCheck(checkingPiecePos ? nextTurn : null);
-
-      if (checkingPiecePos && !hasLegalMoves(newBoard, nextTurn)) {
-        setGameOver(turn);
-        return;
-      }
-
-      if (!checkingPiecePos && !hasLegalMoves(newBoard, nextTurn)) {
-        setGameOver("draw" as const);
-        return;
-      }
-
-      setTurn(nextTurn);
+      // Reset selection
+      resetSelection();
     },
-    [board, turn]
+    [board, isMyTurn, playerColor, makeMove]
   );
 
   const handleSquareClick = useCallback(
     (position: Position) => {
-      if (gameOver) return;
-
       if (!selectedPiece) {
         handlePieceSelection(position);
         return;
@@ -138,7 +92,6 @@ export function ChessBoard() {
       selectedPiece,
       possibleMoves,
       possibleCaptures,
-      gameOver,
       handlePieceSelection,
       handlePieceMove,
       resetSelection,
@@ -155,8 +108,6 @@ export function ChessBoard() {
         const isPossibleCapture = possibleCaptures.some(
           (pos) => pos.x === x && pos.y === y
         );
-        const isCheckingPiece =
-          checkingPiece?.x === x && checkingPiece?.y === y;
 
         return (
           <Square
@@ -165,7 +116,7 @@ export function ChessBoard() {
             isSelected={isSelected}
             isPossibleMove={isPossibleMove}
             isPossibleCapture={isPossibleCapture}
-            isCheckingPiece={isCheckingPiece}
+            isCheckingPiece={false}
             onClick={() => handleSquareClick({ x, y })}
             onDrop={(fromPosition) => {
               handlePieceMove(fromPosition, { x, y });
@@ -195,37 +146,45 @@ export function ChessBoard() {
     selectedPiece,
     possibleMoves,
     possibleCaptures,
-    checkingPiece,
     handleSquareClick,
     handlePieceMove,
     handlePieceSelection,
     resetSelection,
   ]);
 
+  // Add WebSocket move handler
+  useEffect(() => {
+    if (!ws) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+      if (data.type === "MOVE") {
+        setBoard(data.gameState.board);
+        setTurn(data.gameState.turn);
+
+        // Check for checkmate after receiving move
+        if (isCheckmate(data.gameState.board, data.gameState.turn)) {
+          // The winner is the opposite of whose turn it is
+          setWinner(data.gameState.turn === "white" ? "black" : "white");
+        }
+
+        resetSelection();
+      }
+    };
+
+    ws.addEventListener("message", handleMessage);
+    return () => ws.removeEventListener("message", handleMessage);
+  }, [ws]);
+
   return (
     <div className="flex flex-col items-center gap-4">
-      {gameOver && (
-        <div className="text-3xl font-bold text-center text-green-600 mb-4">
-          {gameOver === "draw"
-            ? "Game Draw - Stalemate!"
-            : `${
-                gameOver.charAt(0).toUpperCase() + gameOver.slice(1)
-              } wins by checkmate!`}
-        </div>
+      {winner ? (
+        <h2 className="text-2xl font-bold text-green-600">
+          {winner.charAt(0).toUpperCase() + winner.slice(1)} wins by checkmate!
+        </h2>
+      ) : (
+        <h2 className="text-2xl font-bold capitalize">{`${turn}'s turn`}</h2>
       )}
-      {kingInCheck && !gameOver && (
-        <div className="text-2xl font-bold text-center text-red-600 mb-4">
-          {kingInCheck.charAt(0).toUpperCase() + kingInCheck.slice(1)} King is
-          in check!
-        </div>
-      )}
-      <div className="flex justify-between w-full px-4 text-lg">
-        <div>White captured: {capturedPieces.white}</div>
-        <div>Black captured: {capturedPieces.black}</div>
-      </div>
-      <h2 className="text-2xl font-bold capitalize">
-        {gameOver ? "Game Over" : `${turn}'s turn`}
-      </h2>
       <div className="grid grid-cols-8 gap-0 border-2 border-gray-800">
         {renderBoard()}
       </div>

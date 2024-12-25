@@ -1,12 +1,17 @@
 import { ChessBoard } from "./components/ChessBoard";
+import { GameLobby } from "./components/GameLobby";
+import { GameProvider } from "./contexts/GameContext";
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-xl">
-        <ChessBoard />
+    <GameProvider>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-xl">
+          <GameLobby />
+          <ChessBoard />
+        </div>
       </div>
-    </div>
+    </GameProvider>
   );
 }
 
